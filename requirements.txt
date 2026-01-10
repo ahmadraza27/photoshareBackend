@@ -1,0 +1,11 @@
+Django==5.0.1
+djangorestframework==3.14.0
+django-cors-headers==4.3.1
+django-filter==23.5
+psycopg2-binary==2.9.9
+gunicorn==21.2.0
+whitenoise==6.6.0
+django-storages[azure]==1.14.2
+azure-storage-blob==12.19.0
+pillow==10.2.0
+python-dotenv==1.0.0

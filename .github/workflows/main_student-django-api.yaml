@@ -1,0 +1,40 @@
+name: Deploy to Azure
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+    
+    - name: Install and Build React
+      working-directory: ./frontend
+      run: |
+        # Force clean install
+        rm -rf node_modules
+        npm ci --force
+        CI=false npm run build
+    
+    - name: Prepare Django
+      run: |
+        mkdir -p backend/static
+        cp -r frontend/build/* backend/static/
+        echo "python-3.11" > backend/runtime.txt
+    
+    - name: Deploy
+      uses: azure/webapps-deploy@v3
+      with:
+        app-name: 'student-django-api'
+        publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_D17452D3EFC946F0B4490BB61637C123 }}
+        package: backend

@@ -28,9 +28,9 @@ jobs:
     
     - name: Prepare Django
       run: |
-        mkdir -p backend/static
-        cp -r frontend/build/* backend/static/
-        echo "python-3.11" > backend/runtime.txt
+        # mkdir -p backend/static
+        # cp -r frontend/build/* backend/static/
+        echo "python-3.11" > runtime.txt
     
     - name: Deploy
       uses: azure/webapps-deploy@v3

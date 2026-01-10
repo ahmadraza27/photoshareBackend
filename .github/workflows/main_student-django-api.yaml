@@ -1,4 +1,4 @@
-name: Deploy Django API to Azure
+name: Deploy to Azure
 
 on:
   push:
@@ -11,18 +11,30 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - name: Setup Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
+    # - name: Setup Node.js
+    #   uses: actions/setup-node@v4
+    #   with:
+    #     node-version: '18'
+    #     cache: 'npm'
+    #     cache-dependency-path: frontend/package-lock.json
+    #
+    # - name: Install and Build React
+    #   working-directory: ./frontend
+    #   run: |
+    #     # Force clean install
+    #     rm -rf node_modules
+    #     npm ci --force
+    #     CI=false npm run build
     
-    - name: Install dependencies
+    - name: Prepare Django
       run: |
-        pip install Django djangorestframework django-cors-headers psycopg2-binary gunicorn
+        mkdir -p backend/static
+        cp -r frontend/build/* backend/static/
+        echo "python-3.11" > backend/runtime.txt
     
-    - name: Deploy to Azure
+    - name: Deploy
       uses: azure/webapps-deploy@v3
       with:
         app-name: 'student-django-api'
-        publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE }}
-        package: .
+        publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_D17452D3EFC946F0B4490BB61637C123 }}
+        package: backend

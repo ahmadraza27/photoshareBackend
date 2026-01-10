@@ -9,7 +9,7 @@ from django.urls import path, include,re_path
 from django.conf import settings
 from django.conf.urls.static import static
 from rest_framework.routers import DefaultRouter
-from django.views.generic import TemplateView
+# from django.views.generic import TemplateView
 from api.views import (
     UserViewSet, PhotoViewSet, CommentViewSet, RatingViewSet,
     CustomAuthToken, UserRegistrationView
@@ -35,7 +35,7 @@ urlpatterns = [
     
     # Browsable API auth
     path('api-auth/', include('rest_framework.urls')),
-    re_path(r'^.*', TemplateView.as_view(template_name='index.html')),
+    # re_path(r'^.*', TemplateView.as_view(template_name='index.html')),
 ]
 
 # Serve media files in development

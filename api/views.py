@@ -172,32 +172,60 @@ class PhotoViewSet(viewsets.ModelViewSet):
         elif self.action in ['update', 'partial_update', 'destroy']:
             return [permissions.IsAuthenticated(), IsOwnerOrReadOnly()]
         return [permissions.IsAuthenticatedOrReadOnly()]
-    
     def retrieve(self, request, *args, **kwargs):
         """Get photo detail and track view"""
         instance = self.get_object()
         
-        # Track view
-        PhotoView.objects.create(
-            photo=instance,
-            user=request.user if request.user.is_authenticated else None,
-            ip_address=self.get_client_ip(request),
-            user_agent=request.META.get('HTTP_USER_AGENT', '')[:255]
-        )
-        
-        instance.views_count += 1
-        instance.save(update_fields=['views_count'])
+        # Track view with fixed IP
+        try:
+            PhotoView.objects.create(
+                photo=instance,
+                user=request.user if request.user.is_authenticated else None,
+                ip_address=self.get_client_ip(request),  # This should return IP without port
+                user_agent=request.META.get('HTTP_USER_AGENT', '')[:255]
+            )
+            
+            instance.views_count += 1
+            instance.save(update_fields=['views_count'])
+        except Exception as e:
+            # Log error but don't fail the request
+            print(f"Error tracking view: {e}")
         
         serializer = self.get_serializer(instance)
-        return Response(serializer.data)
+        return Response(serializer.data)   
+    # def retrieve(self, request, *args, **kwargs):
+    #     """Get photo detail and track view"""
+    #     instance = self.get_object()
+    #
+    #     # Track view
+    #     PhotoView.objects.create(
+    #         photo=instance,
+    #         user=request.user if request.user.is_authenticated else None,
+    #         ip_address=self.get_client_ip(request),
+    #         user_agent=request.META.get('HTTP_USER_AGENT', '')[:255]
+    #     )
+    #
+    #     instance.views_count += 1
+    #     instance.save(update_fields=['views_count'])
+    #
+    #     serializer = self.get_serializer(instance)
+    #     return Response(serializer.data)
     
     def get_client_ip(self, request):
-        """Get client IP"""
+        """Get client IP - Remove port number if present"""
         x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
         if x_forwarded_for:
-            ip = x_forwarded_for.split(',')[0]
+            ip = x_forwarded_for.split(',')[0].strip()
         else:
-            ip = request.META.get('REMOTE_ADDR')
+            ip = request.META.get('REMOTE_ADDR', '')
+        
+        # Remove port number if present (e.g., "124.29.216.92:37457" → "124.29.216.92")
+        if ':' in ip and ip.count(':') == 1:
+            # Check if it's IPv4 with port or IPv6
+            if ip.count('.') == 3:  # IPv4 with port
+                ip = ip.split(':')[0]
+            # For IPv6 addresses, you might need different logic
+        
         return ip
     
     @action(detail=False, methods=['get'])

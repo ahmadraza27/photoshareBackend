@@ -3,13 +3,13 @@ Serializers for PhotoShare API
 ================================
 Create this file as: api/serializers.py
 """
-
+from azure.storage.blob import generate_blob_sas, BlobSasPermissions
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from .models import Photo, Comment, Rating, PhotoView
-
+from django.conf import settings
 User = get_user_model()
-
+from datetime import datetime, timedelta
 
 # ============================================
 # USER SERIALIZERS
@@ -131,8 +131,33 @@ class PhotoListSerializer(serializers.ModelSerializer):
         return obj.ratings.count()
 
     def get_image(self, obj):
+        if not obj.image:
+            return None
+            
+        # Check if it's an Azure Blob URL
+        if 'blob.core.windows.net' in obj.image.url:
+            # Generate SAS token for temporary access
+            from urllib.parse import urlparse
+            parsed = urlparse(obj.image.url)
+            blob_path = parsed.path.lstrip('/')
+            
+            # Generate SAS token (valid for 1 hour)
+            sas_token = generate_blob_sas(
+                account_name=settings.AZURE_ACCOUNT_NAME,
+                container_name=settings.AZURE_CONTAINER,
+                blob_name=blob_path.split('/', 1)[1] if '/' in blob_path else blob_path,
+                account_key=settings.AZURE_ACCOUNT_KEY,
+                permission=BlobSasPermissions(read=True),
+                expiry=datetime.utcnow() + timedelta(hours=1)
+            )
+            
+            return f"{obj.image.url}?{sas_token}"
+        
+        return obj.image.url
+
+
         # This returns the absolute URL of the image on Cloudinary's CDN
-        return obj.image.url 
+        # return obj.image.url 
 
 class PhotoDetailSerializer(serializers.ModelSerializer):
     """Detailed photo information"""
@@ -175,8 +200,35 @@ class PhotoDetailSerializer(serializers.ModelSerializer):
         return None
 
     def get_image(self, obj):
+        if not obj.image:
+            return None
+            
+        # Check if it's an Azure Blob URL
+        if 'blob.core.windows.net' in obj.image.url:
+            # Generate SAS token for temporary access
+            from urllib.parse import urlparse
+            parsed = urlparse(obj.image.url)
+            blob_path = parsed.path.lstrip('/')
+            
+            # Generate SAS token (valid for 1 hour)
+            sas_token = generate_blob_sas(
+                account_name=settings.AZURE_ACCOUNT_NAME,
+                container_name=settings.AZURE_CONTAINER,
+                blob_name=blob_path.split('/', 1)[1] if '/' in blob_path else blob_path,
+                account_key=settings.AZURE_ACCOUNT_KEY,
+                permission=BlobSasPermissions(read=True),
+                expiry=datetime.utcnow() + timedelta(hours=1)
+            )
+            
+            return f"{obj.image.url}?{sas_token}"
+        
+        return obj.image.url
+
+
+
+
         # This returns the absolute URL of the image on Cloudinary's CDN
-        return obj.image.url 
+        # return obj.image.url 
 
 class PhotoCreateSerializer(serializers.ModelSerializer):
     """Create photo"""

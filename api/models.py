@@ -122,7 +122,12 @@ class Photo(models.Model):
             self.file_size = self.image.size
 
         super().save(*args, **kwargs)
-
+    def update_average_rating(self):
+        """Update average rating from all ratings"""
+        from django.db.models import Avg
+        result = self.ratings.aggregate(average=Avg('score'))
+        self.average_rating = result['average'] or 0.0
+        self.save(update_fields=['average_rating'])
 
 class Comment(models.Model):
     """Comment Model"""

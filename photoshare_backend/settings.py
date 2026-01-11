@@ -28,13 +28,21 @@ SECRET_KEY = os.environ.get("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 # DEBUG = True
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
-
-ALLOWED_HOSTS = [
-    "localhost",
-    "127.0.0.1",
-    ".azurewebsites.net"
+CORS_ALLOWED_ORIGINS = [
+    'https://frontendstorage12.z38.web.core.windows.net',
+    'http://localhost:3000',  # For local development
+]
+CSRF_TRUSTED_ORIGINS = [
+    'https://student-django-api-frgvawcgfuf9bkgx.italynorth-01.azurewebsites.net',
+    'https://frontendstorage12.z38.web.core.windows.net',
 ]
 
+ALLOWED_HOSTS = [
+    'student-django-api-frgvawcgfuf9bkgx.italynorth-01.azurewebsites.net',
+    'frontendstorage12.z38.web.core.windows.net',
+    'localhost',
+    '127.0.0.1',
+]
 
 # Application definition
 
